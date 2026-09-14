@@ -1,0 +1,53 @@
+{
+  "name": "MCP Server - Research Tools",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "research-mcp"
+      },
+      "id": "d772ad3a-4200-4b1a-9e0a-6e5e6786d0f9",
+      "name": "MCP Server Trigger",
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 1,
+      "position": [
+        -300,
+        300
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "89a151ed-0a70-40ea-96d3-2c02ebf4402f",
+      "name": "SerpAPI",
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        -300,
+        500
+      ],
+      "credentials": {
+        "serpApi": {
+          "id": "REPLACE_ME",
+          "name": "SerpApi account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

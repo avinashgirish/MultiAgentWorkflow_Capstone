@@ -1,0 +1,452 @@
+{
+  "name": "Multi-Agent Analysis System",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {}
+      },
+      "id": "1dafd6e6-e72c-4480-904e-ef188afbf81f",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "hasOutputParser": false,
+        "options": {
+          "systemMessage": "You are a report creator, in your team, you have several agents for your help and tools as well\n\nrules must follow:\n1. Include URL and links for the Research Agent and cite them in the right place if not already\n\ntask:\n1. Understand the topic of research\n2. Use the Research Agent tool to get the research and supporting links on that.\n3. Pass the content to the analysis agent to analyze\n4. Make a GTM using the strategy agent tool\n5. Curate everything, including URLs from web search and links to support the facts, into a report format and write it to a Google Doc using doc tools\n6. output link to the doc, no extra words, just the link"
+        }
+      },
+      "id": "6df72743-c05d-4495-a54e-83369833b109",
+      "name": "Head Analyst",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-pro"
+      },
+      "id": "59335e66-7ab1-4b51-8860-707077250649",
+      "name": "Gemini Model - Head Analyst",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -460,
+        500
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "REPLACE_ME",
+          "name": "Gemini API account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $fromAI('query', 'The research question passed down from the Head Analyst', 'string') }}",
+        "hasOutputParser": false,
+        "options": {
+          "systemMessage": "You are the Research Agent. Find authoritative, up-to-date sources on the given topic using your MCP research tool and always return the exact source URL alongside each finding."
+        }
+      },
+      "id": "73b2184d-54bd-483c-9f5f-c5a0b0d00196",
+      "name": "Research Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -40,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-pro"
+      },
+      "id": "1bc055db-4b1c-4705-a735-68806ed14666",
+      "name": "Gemini Model - Research Agent",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        220
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "REPLACE_ME",
+          "name": "Gemini API account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://YOUR-N8N-INSTANCE/mcp/research-mcp/sse",
+        "authentication": "none"
+      },
+      "id": "6e25306c-6de3-45db-b88f-a0415bc3a1b5",
+      "name": "Research MCP Tool",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        140,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $fromAI('research_content', 'The research findings to analyze, passed down from the Head Analyst', 'string') }}",
+        "hasOutputParser": false,
+        "options": {
+          "systemMessage": "You are the Analyst Agent. Turn the research you are given into a competitor comparison table (Company, Key Offering, Pricing, Strengths, Weaknesses) plus 3-5 sharp insights. Use SerpAPI to fill any gaps."
+        }
+      },
+      "id": "248cc742-a931-4eeb-b224-64897b9583a0",
+      "name": "Analyst Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -40,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-pro"
+      },
+      "id": "6641141f-6f14-4c21-9ead-3dc3c12e2bb8",
+      "name": "Gemini Model - Analyst Agent",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        460
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "REPLACE_ME",
+          "name": "Gemini API account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "524d9e5b-79df-4e4d-8dfa-da51f1f64cc1",
+      "name": "SerpAPI - Analyst",
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        140,
+        460
+      ],
+      "credentials": {
+        "serpApi": {
+          "id": "REPLACE_ME",
+          "name": "SerpApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $fromAI('context', 'The research + competitive analysis to build the GTM strategy from, passed down from the Head Analyst', 'string') }}",
+        "hasOutputParser": false,
+        "options": {
+          "systemMessage": "You are the GTM Agent. Draft a go-to-market strategy section (Target Segment, Positioning & Messaging, Pricing Strategy, Channels, 90-day Launch Plan) grounded in the research and analysis you are given. Use SerpAPI for extra market data."
+        }
+      },
+      "id": "678356a4-0258-4265-a017-83f9b7f698f7",
+      "name": "GTM Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -40,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-pro"
+      },
+      "id": "f7e995ac-cf03-4f01-95cb-c37b1f8fc8c8",
+      "name": "Gemini Model - GTM Agent",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        700
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "REPLACE_ME",
+          "name": "Gemini API account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "7f4d32b1-ece9-40f1-b4fd-24ff97387f88",
+      "name": "SerpAPI - GTM",
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        140,
+        700
+      ],
+      "credentials": {
+        "serpApi": {
+          "id": "REPLACE_ME",
+          "name": "SerpApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "operation": "create",
+        "title": "={{ $fromAI('title', 'Report title', 'string') }}",
+        "options": {}
+      },
+      "id": "61b1c34c-317d-415a-b95f-e110ad404102",
+      "name": "Google Doc create",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        780
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "operation": "update",
+        "documentURL": "={{ $fromAI('documentId', 'The Google Doc ID returned by Google Doc create', 'string') }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $fromAI('content', 'The full markdown report to write into the document', 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "698e7853-2f54-4667-b421-96f2dfef641c",
+      "name": "Google Doc update",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        780
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $json.recipientEmail }}",
+        "subject": "Your Market Research & GTM report is ready",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "id": "f6bd6061-1d7e-44a0-a14d-3c14f6fd2309",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -160,
+        120
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_ME",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Head Analyst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Head Analyst": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Model - Head Analyst": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Head Analyst",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Head Analyst",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyst Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Head Analyst",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GTM Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Head Analyst",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Doc create": {
+      "ai_tool": [
+        [
+          {
+            "node": "Head Analyst",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Doc update": {
+      "ai_tool": [
+        [
+          {
+            "node": "Head Analyst",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Model - Research Agent": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research MCP Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Model - Analyst Agent": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analyst Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI - Analyst": {
+      "ai_tool": [
+        [
+          {
+            "node": "Analyst Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Model - GTM Agent": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "GTM Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI - GTM": {
+      "ai_tool": [
+        [
+          {
+            "node": "GTM Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
