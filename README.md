@@ -48,6 +48,7 @@ Chat / CLI / Streamlit input
 |---|---|
 | Build the workflow visually in n8n | [`n8n/README.md`](n8n/README.md) |
 | Run the workflow as Python code (CLI/Streamlit) | [`crewai_project/README.md`](crewai_project/README.md) |
+| Read the full project writeup / documentation | [`docs/Capstone_Documentation.pdf`](docs/Capstone_Documentation.pdf) |
 
 Both implementations share the same Google Cloud OAuth setup (Gmail + Google
 Docs APIs) — see [`n8n/README.md` Step 1](n8n/README.md#step-1-google-cloud-console-setup).
